@@ -1,6 +1,7 @@
 println("======================================================================")
 println("Loading packages...")
 
+
 using LinearAlgebra, Distributed # Basic libraries
 using FiniteDiff # Differentiation, gradients, hessian
 using DelimitedFiles # Plotting, and files
@@ -138,8 +139,8 @@ end
 # Lagrangian density, and lagrangians
 # =============================================================================
 
-
-@everywhere s = 0.5;
+begin
+@everywhere s = 1.0;
 # Non linear medium
 @everywhere NL(U,A,x) = log(s*abs2(U(x,A)) + 1)/s^2 -  abs2(U(x,A))/s;
 @everywhere NL(U,A,x,y) =  log(s*abs2(U(x,y,A)) + 1)/s^2 -  abs2(U(x,y,A))/s;
@@ -180,9 +181,9 @@ end;
 # Ansatz and some other parts
 @everywhere U(x::Real,A::AbstractVector) = A[1] * exp( -(x^2)/(A[2]^2) );
 
-@everywhere m=0;
-#@everywhere U(x::Real,y::Real,A::AbstractVector) = A[1]*exp( -(x^2+y^2)/(A[2]^2) ) * cis(m*atan(y,x)) * sqrt((x^2+y^2))^m;
-@everywhere U(x::Real,y::Real,A::AbstractVector) = A[1]*exp( -(x^2+y^2)/(A[2]^2) );
+@everywhere m=2;
+@everywhere U(x::Real,y::Real,A::AbstractVector) = A[1]*exp( -(x^2+y^2)/(A[2]^2) ) * cis(m*atan(y,x)) * sqrt((x^2+y^2))^m;
+#@everywhere U(x::Real,y::Real,A::AbstractVector) = A[1]*exp( -(x^2+y^2)/(A[2]^2) );
 
 @everywhere U(x::Real,y::Real,z::Real,A::AbstractVector) = A[1] * exp( -(x^2+y^2+z^2)/(A[2]^2) );
 
@@ -231,15 +232,16 @@ end;
 
 A0 = 1 .+ ones(2);
 
-lloracion = 10
+lloracion = 30
 @time result = optimize(Lagrangian2,A0, iter = lloracion);
 result = abs.(result);
 
 println("A = $result")
 
 println("Writing parameters...")
-open("m0_params.csv","a") do fh
+open("./data/saturation/m2l10_params.csv","a") do fh
     towrite = hcat([lambda s],result')
     writedlm(fh,towrite,',');
 end
 
+end
